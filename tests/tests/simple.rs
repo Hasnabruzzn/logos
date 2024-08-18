@@ -407,3 +407,84 @@ fn uints() {
 
     assert_eq!(lex.next(), None);
 }
+
+#[test]
+fn peek() {
+    let mut lex = Token::lexer("uint8 uint16 uint32");
+
+    assert_eq!(lex.peek(), Some(Ok(Token::Uint)));
+    // with peek only the token is available, but neither span nor extras
+    // assert_eq!(lex.span(), 0..5);
+    // assert_eq!(lex.extras.byte_size, 1);
+    
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 0..5);
+    assert_eq!(lex.extras.byte_size, 1);
+
+    assert_eq!(lex.peek(), Some(Ok(Token::Uint)));
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 6..12);
+    assert_eq!(lex.extras.byte_size, 2);
+
+    assert_eq!(lex.peek(), Some(Ok(Token::Uint)));
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 13..19);
+    assert_eq!(lex.extras.byte_size, 4);
+
+    assert_eq!(lex.peek(), None);
+    assert_eq!(lex.next(), None);
+}
+
+#[test]
+fn state() {
+    let mut lex = Token::lexer("uint8 uint16 uint32");
+
+    let state_0 = lex.state();
+    let state_1 = lex.state();
+    
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 0..5);
+    assert_eq!(lex.extras.byte_size, 1);
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 6..12);
+    assert_eq!(lex.extras.byte_size, 2);
+
+    let state_2 = lex.state();
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 13..19);
+    assert_eq!(lex.extras.byte_size, 4);
+
+    lex.reset_to_state(state_1);
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 0..5);
+    assert_eq!(lex.extras.byte_size, 1);
+
+    lex.reset_to_state(state_2);
+    
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 13..19);
+    assert_eq!(lex.extras.byte_size, 4);
+
+    assert_eq!(lex.next(), None);
+
+    lex.reset_to_state(state_0);
+    
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 0..5);
+    assert_eq!(lex.extras.byte_size, 1);
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 6..12);
+    assert_eq!(lex.extras.byte_size, 2);
+
+    assert_eq!(lex.next(), Some(Ok(Token::Uint)));
+    assert_eq!(lex.span(), 13..19);
+    assert_eq!(lex.extras.byte_size, 4);
+
+    assert_eq!(lex.next(), None);
+}

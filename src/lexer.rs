@@ -184,6 +184,34 @@ impl<'source, Token: Logos<'source>> Lexer<'source, Token> {
             "Invalid Lexer bump",
         )
     }
+
+    /// Takes the current status of the lexer. With reset_to_state the lexer can be set 
+    /// back to the state taken.
+    pub fn state(&self) -> State {
+        State {
+            token_start: self.token_start,
+            token_end: self.token_end,
+        }
+    }
+
+    /// Resets the lexer to a previously taken state
+    pub fn reset_to_state(&mut self, state: State) {
+        self.token_start = state.token_start;
+        self.token_end = state.token_end;
+    }
+
+    /// Reads the next token, but doesn't advance the lexer.
+    /// # example
+    /// 
+    /// let p = lexer.peek();
+    /// let n = lexer.next();
+    /// assert_eq!(p, n);
+    pub fn peek(&mut self) -> Option<Result<Token, Token::Error>> {
+        let state = self.state();
+        let result = self.next();
+        self.reset_to_state(state);
+        result
+    }
 }
 
 impl<'source, Token> Clone for Lexer<'source, Token>
@@ -359,4 +387,10 @@ where
     ) {
         self.token = ManuallyDrop::new(Some(token));
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct State {
+    token_start: usize,
+    token_end: usize,
 }
